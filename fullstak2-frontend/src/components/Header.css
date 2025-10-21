@@ -1,0 +1,110 @@
+.header-dulce {
+  background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%);
+  padding: 15px 0;
+  box-shadow: 0 4px 20px rgba(255, 105, 135, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-dulce .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.brand-dulce {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.3s ease;
+  text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
+}
+
+.brand-dulce:hover {
+  transform: scale(1.05);
+  color: #FF1493;
+}
+
+.nav-dulce {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.nav-link-dulce {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+}
+
+.nav-link-dulce:hover {
+  background: #fff;
+  color: #FF1493;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
+  border-color: #FF1493;
+}
+
+.nav-link-dulce.carrito-badge {
+  background: linear-gradient(135deg, #FF7B9C 0%, #FF96B4 100%);
+  box-shadow: 0 3px 12px rgba(255, 123, 156, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-count {
+  background: #fff;
+  color: #FF1493;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-link-dulce.admin-link {
+  background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
+  box-shadow: 0 3px 12px rgba(255, 20, 147, 0.4);
+}
+
+.nav-link-dulce.admin-link:hover {
+  background: #fff;
+  color: #FF1493;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-dulce .container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .nav-dulce {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-link-dulce {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+}

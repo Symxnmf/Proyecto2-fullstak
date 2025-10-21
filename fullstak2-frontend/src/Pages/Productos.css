@@ -1,0 +1,131 @@
+.productos-page {
+  padding: 40px 20px;
+  min-height: calc(100vh - 200px);
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.1) 0%, rgba(255, 192, 203, 0.1) 100%);
+}
+
+.productos-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 192, 203, 0.15) 100%);
+  border-radius: 30px;
+  box-shadow: 0 8px 30px rgba(255, 105, 135, 0.15);
+}
+
+.productos-titulo {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF1493 0%, #FF7B9C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(255, 105, 135, 0.2);
+}
+
+.productos-subtitulo {
+  font-size: 1.3rem;
+  color: #FF7B9C;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Filtro de categorías */
+.categorias-filtro {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 40px;
+  padding: 20px;
+}
+
+.filtro-btn {
+  padding: 12px 28px;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 123, 156, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filtro-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 123, 156, 0.4);
+  background: linear-gradient(135deg, #FF7B9C 0%, #FF96B4 100%);
+}
+
+.filtro-btn.activo {
+  background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
+  border-color: #FF1493;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 30px rgba(255, 20, 147, 0.5);
+}
+
+/* Grid de productos */
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Mensaje cuando no hay productos */
+.no-productos {
+  text-align: center;
+  padding: 60px 20px;
+  margin: 40px auto;
+  max-width: 500px;
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.15) 0%, rgba(255, 192, 203, 0.15) 100%);
+  border-radius: 25px;
+  box-shadow: 0 8px 30px rgba(255, 105, 135, 0.15);
+}
+
+.no-productos p {
+  font-size: 1.5rem;
+  color: #FF7B9C;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .productos-titulo {
+    font-size: 2rem;
+  }
+
+  .productos-subtitulo {
+    font-size: 1rem;
+  }
+
+  .productos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 10px;
+  }
+
+  .categorias-filtro {
+    padding: 10px;
+  }
+
+  .filtro-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .productos-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
