@@ -3,13 +3,14 @@ module.exports = function(config) {
     basePath: '',
     frameworks: ['jasmine'],
     files: [
-      'src/tests/**/*.js'
+      'src/tests/**/*.spec.js'
     ],
     reporters: ['progress', 'kjhtml'],
     port: 9876,
     colors: true,
-    browsers: ['ChromeHeadless'],
-    singleRun: true,
+    browsers: ['Chrome'],
+    singleRun: false,
+    autoWatch: true,
     concurrency: Infinity
   });
 };
