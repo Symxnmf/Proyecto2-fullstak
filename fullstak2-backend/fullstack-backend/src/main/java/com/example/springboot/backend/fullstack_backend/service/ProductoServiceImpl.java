@@ -51,6 +51,12 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Producto> buscarPorNombre(String nombre) {
+        return productorepositories.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Object[]> contarPorCategoria() {
         return productorepositories.contarPorCategoria();
     }

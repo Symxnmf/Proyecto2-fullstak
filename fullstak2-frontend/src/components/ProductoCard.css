@@ -43,21 +43,36 @@
 /* Contenedor de imagen */
 .producto-imagen-container {
   width: 100%;
-  height: 250px;
+  aspect-ratio: 1 / 1; /* Mantener un cuadrado perfecto en mobile/por defecto */
   overflow: hidden;
   background: linear-gradient(135deg, rgba(255, 182, 193, 0.2) 0%, rgba(255, 192, 203, 0.2) 100%);
   position: relative;
+  /* Centrar la imagen incluso cuando no ocupa toda el área por object-fit: contain */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Nota: se eliminó el fallback ::before para evitar doble altura en navegadores modernos.
+   Si necesitas compatibilidad legacy, podemos reintroducirlo dentro de:
+   @supports not (aspect-ratio: 1 / 1) { ... }
+*/
+
 .producto-imagen {
+  /* No usar posicionamiento absoluto: permitimos al flexbox centrar el contenido */
   width: 100%;
   height: 100%;
+  display: block;
+  /* Llenar el contenedor sin franjas; aceptamos recorte suave */
   object-fit: cover;
+  /* Anclar un poco hacia arriba para que los productos no se "corten" por la mitad */
+  object-position: center 30%;
   transition: transform 0.5s ease;
 }
 
 .producto-card:hover .producto-imagen {
-  transform: scale(1.1);
+  /* Ligero zoom sin provocar recortes notables */
+  transform: scale(1.03);
 }
 
 /* Información del producto */
@@ -175,7 +190,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .producto-imagen-container {
-    height: 200px;
+    aspect-ratio: 1 / 1; /* Sigue siendo cuadrado en mobile */
   }
 
   .producto-nombre {
@@ -189,5 +204,12 @@
   .btn-agregar-carrito {
     padding: 12px 16px;
     font-size: 0.95rem;
+  }
+}
+
+
+@media (min-width: 769px) {
+  .producto-imagen-container {
+    aspect-ratio: 4 / 3;
   }
 }

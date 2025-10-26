@@ -34,3 +34,13 @@ export const obtenerCategoriasStats = async () => {
   // Debe devolver: [{ nombre, cantidad }]
   return res.data;
 };
+
+export const buscarProductos = async (nombre) => {
+  const res = await api.get(`/productos/buscar?nombre=${encodeURIComponent(nombre)}`);
+  return res.data;
+};
+
+export const obtenerStockBajo = async () => {
+  const res = await api.get("/productos/stock-bajo");
+  return res.data;
+};

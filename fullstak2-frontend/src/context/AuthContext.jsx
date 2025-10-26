@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
       (credenciales?.email || "").toLowerCase() === adminEmail.toLowerCase() &&
       adminPassVariants.includes(String(credenciales?.password))
     ) {
-      const localAdmin = { user: { email: adminEmail, nombre: "Admin" }, token: "local-admin" };
+      const localAdmin = { user: { email: adminEmail, nombre: "Admin", rol: "ADMIN" }, token: "local-admin" };
       saveSession(localAdmin);
       return localAdmin;
     }
@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
     const list = raw ? JSON.parse(raw) : [];
     const found = list.find(u => (u.email || "").toLowerCase() === (credenciales.email || "").toLowerCase());
     if (found && found.password === String(credenciales.password)) {
-      const localUser = { user: { email: found.email, nombre: found.nombre }, token: "local-user" };
+      const localUser = { user: { email: found.email, nombre: found.nombre, rol: "CLIENTE" }, token: "local-user" };
       saveSession(localUser);
       return localUser;
     }
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
     try {
       const data = await registerApi(info);
       if (!data?.token) {
-        saveSession({ user: { email: info.email, nombre: info.nombre || "Usuario" }, token: "local-user" });
+        saveSession({ user: { email: info.email, nombre: info.nombre || "Usuario", rol: "CLIENTE" }, token: "local-user" });
       }
       return data;
     } catch (_) {
@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
       const nuevo = { email: info.email, nombre: info.nombre || "Usuario", password: String(info.password || "") };
       list.push(nuevo);
       localStorage.setItem(key, JSON.stringify(list));
-      saveSession({ user: { email: nuevo.email, nombre: nuevo.nombre }, token: "local-user" });
+      saveSession({ user: { email: nuevo.email, nombre: nuevo.nombre, rol: "CLIENTE" }, token: "local-user" });
       return { ok: true };
     }
   };

@@ -19,6 +19,8 @@ public interface ProductoService {
 
     List<Producto> findOfertas();
 
+    List<Producto> buscarPorNombre(String nombre);
+
     List<Object[]> contarPorCategoria();
 
 

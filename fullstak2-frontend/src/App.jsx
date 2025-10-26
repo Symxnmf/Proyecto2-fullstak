@@ -6,7 +6,7 @@ import Ofertas from "./Pages/Ofertas.jsx";
 import Checkout from "./Pages/Checkout.jsx";
 import CompraExitosa from "./Pages/CompraExitosa.jsx";
 import CompraFallida from "./Pages/CompraFallida.jsx";
-import AdminPanel from "./Pages/AdminPanel.jsx";
+import AdminPanelClean from "./Pages/AdminPanelClean.jsx";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import "./App.css";
@@ -29,7 +29,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={
             <ProtectedRoute>
-              <AdminPanel />
+              <AdminPanelClean />
             </ProtectedRoute>
           } />
         </Routes>

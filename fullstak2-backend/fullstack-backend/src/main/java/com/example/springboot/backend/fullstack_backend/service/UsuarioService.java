@@ -10,6 +10,8 @@ public interface UsuarioService {
     List<Usuario> findByAll();
 
     Optional<Usuario> findById(Long id);
+    
+    Optional<Usuario> findByCorreo(String correo);
 
     Usuario save(Usuario unUsuario);
 

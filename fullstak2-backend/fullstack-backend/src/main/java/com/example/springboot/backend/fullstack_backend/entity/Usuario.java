@@ -17,6 +17,8 @@ public class Usuario {
     private String apellido;
     private String correo;
     private String celular;
+    private String contrasena;
+    private String rol; // "ADMIN" o "CLIENTE"
     
     public Usuario() {
     }
@@ -27,6 +29,7 @@ public class Usuario {
         this.apellido = apellido;
         this.correo = correo;
         this.celular = celular;
+        this.contrasena = null;
     }
 
     public Long getId() {
@@ -58,6 +61,18 @@ public class Usuario {
     }
     public void setCelular(String celular) {
         this.celular = celular;
+    }
+    public String getContrasena() {
+        return contrasena;
+    }
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
+    }
+    public String getRol() {
+        return rol;
+    }
+    public void setRol(String rol) {
+        this.rol = rol;
     }
     
 }

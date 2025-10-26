@@ -11,6 +11,7 @@ export default function Productos() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [categoriaActiva, setCategoriaActiva] = useState("Todas");
+  const [busqueda, setBusqueda] = useState("");
   const { agregar } = useCarrito();
 
   useEffect(() => {
@@ -45,6 +46,11 @@ export default function Productos() {
     ? productos 
     : productos.filter(p => p.categoria === categoriaActiva);
 
+  // Aplicar búsqueda
+  const productosFinales = busqueda.trim()
+    ? productosFiltrados.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    : productosFiltrados;
+
   return (
     <div className="productos-page">
       <div className="productos-header">
@@ -58,6 +64,18 @@ export default function Productos() {
       {error && !cargando && (
         <div className="no-productos"><p>{error}</p></div>
       )}
+
+      {/* Input de búsqueda */}
+      <div className="mb-3 d-flex justify-content-center">
+        <input 
+          type="text" 
+          className="form-control" 
+          style={{maxWidth: '500px'}}
+          placeholder="🔍 Buscar productos por nombre..." 
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+        />
+      </div>
 
       {/* Filtro de categorías */}
       <div className="categorias-filtro">
@@ -74,14 +92,14 @@ export default function Productos() {
 
       {/* Grid de productos */}
       <div className="productos-grid">
-        {productosFiltrados.map(p => (
+        {productosFinales.map(p => (
           <ProductoCard key={p.id} producto={p} onAgregar={agregar} />
         ))}
       </div>
 
-      {productosFiltrados.length === 0 && !cargando && (
+      {productosFinales.length === 0 && !cargando && (
         <div className="no-productos">
-          <p>No hay productos en esta categoría 😔</p>
+          <p>No hay productos que coincidan con tu búsqueda 😔</p>
         </div>
       )}
     </div>

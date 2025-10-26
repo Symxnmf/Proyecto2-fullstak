@@ -31,6 +31,12 @@ public class UsuarioServiceImpl implements UsuarioService{
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Usuario> findByCorreo(String correo) {
+        return repository.findByCorreo(correo);
+    }
+
+    @Override
     @Transactional
     public Usuario save(Usuario unUsuario) {
         return repository.save(unUsuario);
