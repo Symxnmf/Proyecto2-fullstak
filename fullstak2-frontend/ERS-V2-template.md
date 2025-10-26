@@ -212,7 +212,7 @@ El backend estará disponible en http://localhost:8080
 **Frontend (React + Vite):**
 ```bash
 cd fullstak2-frontend
-npm install
+npm install #si no esta instalado!!
 npm run dev
 ```
 El frontend estará disponible en http://localhost:5173
