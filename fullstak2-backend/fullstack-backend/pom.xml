@@ -76,6 +76,41 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- JaCoCo code coverage plugin -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+					<!-- Prepara el agente para capturar cobertura durante los tests -->
+					<execution>
+						<id>prepare-agent</id>
+						<configuration>
+							<!-- Limitar instrumentación a nuestro código para evitar problemas con clases del JDK -->
+							<includes>
+								<include>com/example/**</include>
+							</includes>
+							<!-- Evitar instrumentar clases generadas por Mockito/ByteBuddy que fallan con JDK recientes -->
+							<excludes>
+								<exclude>**/*$Mockito*</exclude>
+								<exclude>**/*$ByteBuddy*</exclude>
+								<exclude>org/mockito/**</exclude>
+							</excludes>
+						</configuration>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<!-- Genera el reporte HTML/XML/CSV después de los tests -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
