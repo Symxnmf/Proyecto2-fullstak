@@ -7,6 +7,7 @@ import "./Header.css";
 export default function Header() {
   const { carrito } = useCarrito();
   const { user, logout } = useAuth();
+  const isAdmin = (user?.rol || "").toUpperCase() === "ADMIN";
 
   return (
     <header className="header-dulce">
@@ -24,7 +25,14 @@ export default function Header() {
           </Link>
           {user ? (
             <>
-              <Link className="nav-link-dulce admin-link" to="/admin">Admin</Link>
+              {/* Chip con usuario logueado */}
+              <span className="nav-link-dulce" title={user.email || user.nombre} style={{ cursor: "default" }}>
+                👤 {user.nombre || user.email}
+              </span>
+              {/* Link a Admin sólo si el rol es ADMIN */}
+              {isAdmin && (
+                <Link className="nav-link-dulce admin-link" to="/admin">Admin</Link>
+              )}
               <button className="nav-link-dulce" onClick={logout} style={{ border: 'none' }}>Salir</button>
             </>
           ) : (
