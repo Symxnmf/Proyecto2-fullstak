@@ -17,11 +17,16 @@ export default function Login() {
     setCargando(true);
     try {
       if (modo === "login") {
-        await login({ email: form.email, password: form.password });
+        const data = await login({ email: form.email, password: form.password });
+        // Redirigir según rol devuelto por el backend/contexto
+        const rol = data?.user?.rol || "CLIENTE";
+        navigate(rol === "ADMIN" ? "/admin" : "/");
       } else {
-        await register({ nombre: form.nombre, email: form.email, password: form.password });
+        const data = await register({ nombre: form.nombre, email: form.email, password: form.password });
+        // Los nuevos usuarios son CLIENTE por defecto
+        const rol = data?.user?.rol || "CLIENTE";
+        navigate(rol === "ADMIN" ? "/admin" : "/");
       }
-      navigate("/admin");
     } catch (err) {
       setError("No se pudo completar la operación. Verifica tus datos.");
       console.error(err);
