@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -145,6 +146,7 @@ public class ProductoRestController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class))
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Producto> crearProducto(@Valid @RequestBody Producto unProducto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productoservice.save(unProducto));
     }
@@ -157,6 +159,7 @@ public class ProductoRestController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = Producto.class)))
     @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> modificarProducto(@PathVariable Long id, @Valid @RequestBody Producto unProducto) {
         Optional<Producto> optionalProducto = productoservice.findById(id);
         if (optionalProducto.isPresent()) {
@@ -181,6 +184,7 @@ public class ProductoRestController {
     @ApiResponse(responseCode = "204", description = "Producto eliminado correctamente")
     @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> eliminarProducto(@PathVariable Long id) {
         Optional<Producto> productoOptional = productoservice.findById(id);
         if (productoOptional.isPresent()) {
@@ -198,6 +202,7 @@ public class ProductoRestController {
         content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
     @ApiResponse(responseCode = "400", description = "Error en la creación por datos inválidos")
     @PostMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> crearProductosEnBatch(@RequestBody List<Producto> productos) {
         try {
             List<Producto> guardados = new java.util.ArrayList<>();

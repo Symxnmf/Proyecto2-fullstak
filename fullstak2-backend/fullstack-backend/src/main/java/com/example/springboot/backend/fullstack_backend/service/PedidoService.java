@@ -17,5 +17,9 @@ public interface PedidoService {
 
     Optional<Pedido> delete(Long id);
 
+    Optional<Long> getNextNumeroBoleta();
+
+    List<Pedido> findByUsuario(String usuario);
+
 
 }

@@ -7,12 +7,16 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springboot.backend.fullstack_backend.dto.AuthRequest;
+import com.example.springboot.backend.fullstack_backend.dto.AuthResponse;
 import com.example.springboot.backend.fullstack_backend.entity.Usuario;
+import com.example.springboot.backend.fullstack_backend.security.JwtService;
 import com.example.springboot.backend.fullstack_backend.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,88 +27,80 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Auth", description = "Endpoints de autenticación y registro")
+@Tag(name = "Auth", description = "Autenticación y registro")
 public class AuthController {
 
-    // Inyección de dependencia del servicio de usuarios
     @Autowired
     private UsuarioService usuarioService;
 
-    @Operation(summary = "Login de usuario", description = "Valida credenciales y devuelve token + datos básicos")
-    @ApiResponse(responseCode = "200", description = "Login correcto", content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
-    /**
-     * Endpoint para inicio de sesión
-     * Valida credenciales contra admin hardcodeado o usuarios en BD
-     * @param credentials Map con email y password
-     * @return ResponseEntity con token y datos del usuario o error 401
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        // Extraer credenciales del body
-        String email = credentials.get("email");
-        String password = credentials.get("password");
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-        // Primero validamos si es el administrador del sistema
-        // TODO: En producción esto debería estar en BD también
+    @Autowired
+    private JwtService jwtService;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest req) {
+        String email = req.getEmail();
+        String password = req.getPassword();
+
         if ("Admin@duocuc.cl".equalsIgnoreCase(email) && "Duoc12345.".equals(password)) {
-            // Construir respuesta para admin
-            Map<String, Object> response = new HashMap<>();
-            Map<String, String> user = new HashMap<>();
+            Map<String, Object> user = new HashMap<>();
             user.put("email", "Admin@duocuc.cl");
             user.put("nombre", "Administrador");
-            user.put("rol", "ADMIN"); // Rol de administrador
-            // Generamos un token simple 
-            response.put("token", "admin-token-" + System.currentTimeMillis());
-            response.put("user", user);
-            return ResponseEntity.ok(response);
+            user.put("rol", "ADMIN");
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", "ADMIN");
+            String access = jwtService.generateAccessToken(email, claims);
+            String refresh = jwtService.generateRefreshToken(email, claims);
+            return ResponseEntity.ok(new AuthResponse(access, refresh, user));
         }
 
-        // Si no es admin, buscar en base de datos
         try {
-            // Buscar usuario por correo
             Optional<Usuario> usuarioBD = usuarioService.findByCorreo(email);
-            // Validar que existe y la contraseña coincide
-            if (usuarioBD.isPresent() && password.equals(usuarioBD.get().getContrasena())) {
+            if (usuarioBD.isPresent()) {
                 Usuario user = usuarioBD.get();
-                // Preparar respuesta exitosa
-                Map<String, Object> response = new HashMap<>();
-                Map<String, String> userData = new HashMap<>();
-                userData.put("email", user.getCorreo());
-                userData.put("nombre", user.getNombre());
-                // Asignar rol, por defecto CLIENTE si no tiene
-                userData.put("rol", user.getRol() != null ? user.getRol() : "CLIENTE");
-                response.put("token", "user-token-" + System.currentTimeMillis());
-                response.put("user", userData);
-                return ResponseEntity.ok(response);
-            }
-        } catch (Exception e) {
-            // Si hay error en la búsqueda, continuar al mensaje de error genérico
-            // No exponemos si el usuario existe o no por seguridad
-        }
+                String rol = user.getRol() != null ? user.getRol() : "CLIENTE";
+                // Validar password con BCrypt
+                if (user.getContrasena() != null && passwordEncoder.matches(password, user.getContrasena())) {
+                    Map<String, Object> claims = new HashMap<>();
+                    claims.put("role", rol);
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("email", user.getCorreo());
+                    userMap.put("nombre", user.getNombre());
+                    userMap.put("rol", rol);
+                    String access = jwtService.generateAccessToken(email, claims);
+                    String refresh = jwtService.generateRefreshToken(email, claims);
+                    return ResponseEntity.ok(new AuthResponse(access, refresh, userMap));
+                }
 
-        // Si llegamos aquí, las credenciales son inválidas
+                if (user.getContrasena() != null && user.getContrasena().equals(password)) {
+                    user.setContrasena(passwordEncoder.encode(password));
+                    usuarioService.save(user);
+                    Map<String, Object> claims = new HashMap<>();
+                    claims.put("role", rol);
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("email", user.getCorreo());
+                    userMap.put("nombre", user.getNombre());
+                    userMap.put("rol", rol);
+                    String access = jwtService.generateAccessToken(email, claims);
+                    String refresh = jwtService.generateRefreshToken(email, claims);
+                    return ResponseEntity.ok(new AuthResponse(access, refresh, userMap));
+                }
+            }
+        } catch (Exception e) {}
+
         Map<String, String> error = new HashMap<>();
         error.put("message", "Credenciales inválidas");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
-    @Operation(summary = "Registro de usuario", description = "Crea un nuevo usuario y retorna token + datos básicos")
-    @ApiResponse(responseCode = "201", description = "Usuario registrado", content = @Content(mediaType = "application/json"))
-    @ApiResponse(responseCode = "400", description = "Error en el registro")
-    /**
-     * Endpoint para registro de nuevos usuarios
-     * Crea un usuario con rol CLIENTE por defecto
-     * @param datos Map con nombre, email y password
-     * @return ResponseEntity con usuario creado y token, o error
-     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> datos) {
         try {
-            // Extraer email del request
             String email = datos.get("email");
             
-            // Validar que el email no esté ya registrado
             Optional<Usuario> existente = usuarioService.findByCorreo(email);
             if (existente.isPresent()) {
                 // Email duplicado, retornar error
@@ -117,29 +113,54 @@ public class AuthController {
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setNombre(datos.get("nombre"));
             nuevoUsuario.setCorreo(email);
-            nuevoUsuario.setContrasena(datos.get("password")); 
+            // Hashear contraseña con BCrypt
+            nuevoUsuario.setContrasena(passwordEncoder.encode(datos.get("password")));
             nuevoUsuario.setRol("CLIENTE"); // Todos los registros nuevos son clientes
             
             // Persistir en base de datos
             Usuario saved = usuarioService.save(nuevoUsuario);
             
             // Construir respuesta exitosa con datos del usuario
-            Map<String, Object> response = new HashMap<>();
-            Map<String, String> user = new HashMap<>();
+            Map<String, Object> user = new HashMap<>();
             user.put("email", saved.getCorreo());
             user.put("nombre", saved.getNombre());
             user.put("rol", "CLIENTE");
-            response.put("token", "user-token-" + System.currentTimeMillis());
-            response.put("user", user);
-            response.put("ok", true);
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", "CLIENTE");
+            String access = jwtService.generateAccessToken(saved.getCorreo(), claims);
+            String refresh = jwtService.generateRefreshToken(saved.getCorreo(), claims);
+            AuthResponse response = new AuthResponse(access, refresh, user);
             
-            // Retornar 201 Created
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            // Capturar cualquier error y retornar mensaje genérico
             Map<String, String> error = new HashMap<>();
             error.put("message", "Error al registrar usuario: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "refreshToken es requerido"));
+        }
+        try {
+            String email = jwtService.extractUsername(refreshToken);
+            if (!jwtService.isTokenValid(refreshToken, email)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "refreshToken inválido"));
+            }
+            String rol = jwtService.extractAllClaims(refreshToken).get("role", String.class);
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", rol);
+            String newAccess = jwtService.generateAccessToken(email, claims);
+            return ResponseEntity.ok(Map.of("accessToken", newAccess));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "refreshToken inválido"));
         }
     }
 }

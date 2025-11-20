@@ -29,6 +29,8 @@ export default function Header() {
               <span className="nav-link-dulce" title={user.email || user.nombre} style={{ cursor: "default" }}>
                 👤 {user.nombre || user.email}
               </span>
+              {/* Perfil */}
+              <Link className="nav-link-dulce" to="/perfil">Perfil</Link>
               {/* Link a Admin sólo si el rol es ADMIN */}
               {isAdmin && (
                 <Link className="nav-link-dulce admin-link" to="/admin">Admin</Link>

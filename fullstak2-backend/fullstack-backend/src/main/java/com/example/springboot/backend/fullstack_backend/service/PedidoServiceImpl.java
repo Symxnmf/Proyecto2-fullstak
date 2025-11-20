@@ -42,6 +42,19 @@ public class PedidoServiceImpl implements PedidoService {
     pedidoOptional.ifPresent(pedido -> pedidoRepository.deleteById(id));
     return pedidoOptional;
 }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Long> getNextNumeroBoleta() {
+        return pedidoRepository.findTopByOrderByNumeroDesc()
+                .map(p -> p.getNumero() == null ? 1L : p.getNumero() + 1)
+                .or(() -> Optional.of(1L));
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Pedido> findByUsuario(String usuario) {
+        return pedidoRepository.findByUsuarioIgnoreCaseOrderByIdDesc(usuario);
+    }
 
 }

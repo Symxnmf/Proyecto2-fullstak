@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { obtenerProductos, crearProducto, actualizarProducto, eliminarProducto, obtenerCategoriasStats } from "../api/apiProductos";
 import { obtenerUsuarios, crearUsuario, actualizarUsuario, eliminarUsuario } from "../api/apiUsuarios";
-import { obtenerPedidos } from "../api/apiPedidos";
+import { obtenerPedidosAdmin } from "../api/apiPedidos";
 import "./AdminPanel.css";
 
 export default function AdminPanelClean() {
@@ -23,6 +23,10 @@ export default function AdminPanelClean() {
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [formUsuario, setFormUsuario] = useState({ nombre: "", apellido: "", correo: "", celular: "" });
 
+  // Estados para filtros de pedidos
+  const [filtrosPedidos, setFiltrosPedidos] = useState({ cliente: "", desde: "", hasta: "" });
+  const [pedidoExpandido, setPedidoExpandido] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => { cargar(); }, []);
@@ -32,7 +36,7 @@ export default function AdminPanelClean() {
       const [prods, usrs, peds, cats] = await Promise.all([
         obtenerProductos().catch(() => []),
         obtenerUsuarios().catch(() => []),
-        obtenerPedidos().catch(() => []),
+        obtenerPedidosAdmin(filtrosPedidos).catch(() => []),
         obtenerCategoriasStats().catch(() => []),
       ]);
       setProductos(Array.isArray(prods) ? prods : []);
@@ -42,6 +46,20 @@ export default function AdminPanelClean() {
     } catch {
       setProductos([]); setUsuarios([]); setPedidos([]); setCatStats([]);
     }
+  }
+
+  async function aplicarFiltros() {
+    try {
+      const peds = await obtenerPedidosAdmin(filtrosPedidos);
+      setPedidos(Array.isArray(peds) ? peds : []);
+    } catch (e) {
+      setMensaje({ tipo: "error", texto: "Error al filtrar pedidos" });
+    }
+  }
+
+  function limpiarFiltros() {
+    setFiltrosPedidos({ cliente: "", desde: "", hasta: "" });
+    cargar();
   }
 
   const lowStock = useMemo(() => productos.filter(p => Number(p.stock) > 0 && Number(p.stock) <= 5).length, [productos]);
@@ -365,16 +383,125 @@ export default function AdminPanelClean() {
         {vista === "pedidos" && (
           <section className="panel">
             <h4>Órdenes ({pedidos.length})</h4>
+            
+            {/* Filtros de búsqueda */}
+            <div className="mb-3 p-3 bg-light border rounded">
+              <div className="row g-2">
+                <div className="col-md-4">
+                  <input 
+                    type="text" 
+                    className="form-control form-control-sm" 
+                    placeholder="Filtrar por email de cliente"
+                    value={filtrosPedidos.cliente}
+                    onChange={e => setFiltrosPedidos({...filtrosPedidos, cliente: e.target.value})}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <input 
+                    type="date" 
+                    className="form-control form-control-sm"
+                    placeholder="Desde"
+                    value={filtrosPedidos.desde}
+                    onChange={e => setFiltrosPedidos({...filtrosPedidos, desde: e.target.value})}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <input 
+                    type="date" 
+                    className="form-control form-control-sm"
+                    placeholder="Hasta"
+                    value={filtrosPedidos.hasta}
+                    onChange={e => setFiltrosPedidos({...filtrosPedidos, hasta: e.target.value})}
+                  />
+                </div>
+                <div className="col-md-2">
+                  <button className="btn btn-sm btn-primary w-100" onClick={aplicarFiltros}>
+                    🔍 Filtrar
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2">
+                <button className="btn btn-sm btn-secondary" onClick={limpiarFiltros}>
+                  🔄 Limpiar filtros
+                </button>
+              </div>
+            </div>
+
             <div className="table-responsive">
-              <table className="table table-sm table-striped">
-                <thead><tr><th>#</th><th>Fecha</th><th>Total</th><th>Usuario</th><th>Detalles</th></tr></thead>
+              <table className="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Boleta</th>
+                    <th>Fecha</th>
+                    <th>Subtotal</th>
+                    <th>IVA</th>
+                    <th>Total</th>
+                    <th>Usuario</th>
+                    <th>Items</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {pedidos.map(p => (
-                    <tr key={p.id}><td>{p.id}</td><td>{p.fecha}</td><td>{Number(p.total || 0).toLocaleString('es-CL')}</td><td>{p?.usuario?.nombre || '-'}</td><td>{p?.detalles?.length || 0}</td></tr>
+                    <React.Fragment key={p.id}>
+                      <tr 
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setPedidoExpandido(pedidoExpandido === p.id ? null : p.id)}
+                      >
+                        <td><strong>#{p.numero || p.id}</strong></td>
+                        <td>{p.fecha ? new Date(p.fecha).toLocaleString('es-CL') : '-'}</td>
+                        <td>${Number(p.subtotal || 0).toLocaleString('es-CL')}</td>
+                        <td>${Number(p.iva || 0).toLocaleString('es-CL')}</td>
+                        <td><strong>${Number(p.total || 0).toLocaleString('es-CL')}</strong></td>
+                        <td>{p.usuario || '-'}</td>
+                        <td>{p?.detalles?.length || 0}</td>
+                        <td>
+                          <button 
+                            className="btn btn-sm btn-info"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPedidoExpandido(pedidoExpandido === p.id ? null : p.id);
+                            }}
+                          >
+                            {pedidoExpandido === p.id ? '▼ Ocultar' : '▶ Ver'}
+                          </button>
+                        </td>
+                      </tr>
+                      {pedidoExpandido === p.id && (
+                        <tr>
+                          <td colSpan="8" className="bg-light">
+                            <div className="p-3">
+                              <h6>📦 Detalles del Pedido #{p.numero || p.id}</h6>
+                              <div className="row">
+                                <div className="col-md-6">
+                                  <strong>Cliente:</strong> {p.usuario || 'N/A'}<br/>
+                                  <strong>Fecha:</strong> {p.fecha || 'N/A'}<br/>
+                                  <strong>Subtotal:</strong> ${Number(p.subtotal || 0).toLocaleString('es-CL')}<br/>
+                                  <strong>IVA (19%):</strong> ${Number(p.iva || 0).toLocaleString('es-CL')}<br/>
+                                  <strong>Total:</strong> <span className="text-success"><strong>${Number(p.total || 0).toLocaleString('es-CL')}</strong></span>
+                                </div>
+                                <div className="col-md-6">
+                                  <strong>Información adicional:</strong>
+                                  {p.detalles && typeof p.detalles === 'string' && (
+                                    <pre className="mt-2 p-2 bg-white border rounded" style={{fontSize: '0.85em', maxHeight: '200px', overflow: 'auto'}}>
+                                      {JSON.stringify(JSON.parse(p.detalles), null, 2)}
+                                    </pre>
+                                  )}
+                                  {!p.detalles && <p className="text-muted">Sin detalles adicionales</p>}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
             </div>
+            {pedidos.length === 0 && (
+              <p className="text-center text-muted mt-3">No hay pedidos que coincidan con los filtros</p>
+            )}
           </section>
         )}
 

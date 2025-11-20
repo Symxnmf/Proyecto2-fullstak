@@ -23,13 +23,11 @@ export default function Productos() {
         
         // Si el backend está vacío, cargar productos iniciales
         if (!Array.isArray(data) || data.length === 0) {
-          console.log("Backend vacío, intentando cargar productos iniciales...");
           data = await cargarProductosIniciales();
         }
         
         setProductos(Array.isArray(data) && data.length > 0 ? data : productosData);
       } catch (e) {
-        console.error("Error cargando productos desde backend", e);
         setProductos(productosData);
       } finally {
         setCargando(false);
