@@ -20,7 +20,6 @@ export default function Ofertas() {
         const lista = Array.isArray(datos) && datos.length > 0 ? datos : productosData.filter(p => p.oferta);
         setOfertas(lista);
       } catch (e) {
-        console.error("Error cargando ofertas desde backend, usando locales", e);
         setOfertas(productosData.filter(p => p.oferta));
       } finally {
         setCargando(false);

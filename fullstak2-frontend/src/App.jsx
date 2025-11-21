@@ -7,6 +7,7 @@ import Checkout from "./Pages/Checkout.jsx";
 import CompraExitosa from "./Pages/CompraExitosa.jsx";
 import CompraFallida from "./Pages/CompraFallida.jsx";
 import AdminPanelClean from "./Pages/AdminPanelClean.jsx";
+import Perfil from "./Pages/Perfil.jsx";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import "./App.css";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/ofertas" element={<Ofertas />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/perfil" element={<Perfil />} />
           <Route path="/exito" element={<CompraExitosa />} />
           <Route path="/error" element={<CompraFallida />} />
           <Route path="/login" element={<Login />} />

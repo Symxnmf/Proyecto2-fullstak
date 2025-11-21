@@ -29,10 +29,39 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (resp) => resp,
   (err) => {
-    if (err?.response?.status === 401) {
+    const originalRequest = err.config || {};
+    const status = err?.response?.status;
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const saved = localStorage.getItem("auth");
+        const parsed = saved ? JSON.parse(saved) : null;
+        const refreshToken = parsed?.refreshToken;
+        if (refreshToken) {
+          // Intentar refrescar access token
+          return api
+            .post("/auth/refresh", { refreshToken })
+            .then((res) => {
+              const newAccess = res?.data?.accessToken;
+              if (newAccess) {
+                const updated = { ...(parsed || {}), token: newAccess };
+                localStorage.setItem("auth", JSON.stringify(updated));
+                originalRequest.headers = originalRequest.headers || {};
+                originalRequest.headers["Authorization"] = `Bearer ${newAccess}`;
+                return api(originalRequest);
+              }
+              // Si no llegó nuevo token, limpiar sesión
+              localStorage.removeItem("auth");
+              return Promise.reject(err);
+            })
+            .catch((e) => {
+              localStorage.removeItem("auth");
+              return Promise.reject(e);
+            });
+        }
+      } catch (_) {}
+      // sin refresh token, limpiar sesión
       localStorage.removeItem("auth");
-      // opcional: podemos redirigir a /login si no estamos ya en login
-      // location.pathname !== "/login" && (location.href = "/login");
     }
     return Promise.reject(err);
   }

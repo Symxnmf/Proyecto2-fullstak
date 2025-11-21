@@ -1,46 +1,68 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useCarrito } from "../context/CarritoContext";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Checkout() {
   const { carrito, total, vaciar } = useCarrito();
+  const { token, user } = useAuth();
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [correo, setCorreo] = useState("");
   const [celular, setCelular] = useState("");
   const [procesando, setProcesando] = useState(false);
+  const [notificacion, setNotificacion] = useState(null);
   const navigate = useNavigate();
 
+  // Autocompletar correo cuando el usuario está autenticado
+  useEffect(() => {
+    if (user?.email) {
+      setCorreo(user.email);
+    }
+  }, [user]);
+
   const confirmar = async () => {
-    if (!nombre || !direccion || !correo) {
-      alert("Completa todos los campos obligatorios");
+    if (!user) {
+      setNotificacion({ tipo: "warning", mensaje: "Debes iniciar sesión para comprar." });
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
+    // Si el usuario está logueado usamos su email aunque el campo esté deshabilitado
+    const correoEfectivo = user?.email || correo;
+    if (!nombre.trim() || !direccion.trim()) {
+      setNotificacion({ tipo: "danger", mensaje: "Completa todos los campos obligatorios" });
       return;
     }
     
     setProcesando(true);
     try {
-      // Crear el pedido en el backend
-      const pedidoData = {
-        fecha: new Date().toISOString().split('T')[0],
-        total: total,
-        usuario: correo,
-        detalles: JSON.stringify({
-          nombre,
-          direccion,
-          celular,
-          productos: carrito.map(p => ({ id: p.id, nombre: p.nombre, precio: p.precio }))
-        })
-      };
+      // Construir items desde carrito
+      const items = Object.values(
+        carrito.reduce((acc, p) => {
+          const key = p.id;
+          if (!acc[key]) acc[key] = { productoId: p.id, cantidad: 0 };
+          acc[key].cantidad += 1;
+          return acc;
+        }, {})
+      );
+
+      // Enviar a checkout protegido (usa email del token en backend)
+      const response = await api.post("/pedidos/checkout", {
+        items,
+        detalles: JSON.stringify({ nombre, direccion, celular, correo: correoEfectivo })
+      });
       
-      await api.post("/pedidos", pedidoData);
-      vaciar();
-      navigate("/exito");
+      // Mostrar notificación de éxito antes de navegar
+      setNotificacion({ tipo: "success", mensaje: "¡Pedido realizado con éxito!" });
+      setTimeout(() => {
+        vaciar();
+        navigate("/exito");
+      }, 1500);
     } catch (error) {
       console.error("Error al procesar pedido:", error);
-      // Incluso si falla el backend, permitimos continuar
-      vaciar();
-      navigate("/exito");
+      const mensaje = error?.response?.data?.message || error?.message || "Error al procesar el pedido";
+      setNotificacion({ tipo: "danger", mensaje: `Error: ${mensaje}. Por favor intenta nuevamente.` });
     } finally {
       setProcesando(false);
     }
@@ -48,9 +70,27 @@ export default function Checkout() {
 
   if (!carrito.length) return <div className="mx-auto p-4" style={{ maxWidth: 600 }}><p>Tu carrito está vacío. <a href="/productos">Ver productos</a></p></div>;
 
+  // Bloqueo visual si no hay sesión
+  if (!user) {
+    return (
+      <div className="mx-auto p-4" style={{ maxWidth: 600 }}>
+        <h2>Finalizar Compra 🛒</h2>
+        <p>Necesitas iniciar sesión para completar la compra.</p>
+        <a className="btn btn-primary" href="/login">Ir a iniciar sesión</a>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto p-4" style={{ maxWidth: 600 }}>
       <h2>Finalizar Compra 🛒</h2>
+      
+      {notificacion && (
+        <div className={`alert alert-${notificacion.tipo} alert-dismissible fade show`} role="alert">
+          {notificacion.mensaje}
+          <button type="button" className="btn-close" onClick={() => setNotificacion(null)}></button>
+        </div>
+      )}
       
       <div className="mb-4">
         <h5>Resumen del pedido:</h5>
@@ -74,14 +114,17 @@ export default function Checkout() {
           required 
         />
       </div>
+      {/* El backend utiliza el correo del usuario autenticado (JWT). Este campo se mantiene solo a modo informativo. */}
       <div className="mb-3">
-        <label className="form-label">Correo electrónico *</label>
-        <input 
-          className="form-control" 
+        <label className="form-label">Correo electrónico</label>
+        <input
+          className="form-control"
           type="email"
-          value={correo} 
+          value={correo}
           onChange={e => setCorreo(e.target.value)}
-          required 
+          placeholder="(se toma del usuario autenticado)"
+          disabled={!!token}
+          readOnly={!!token}
         />
       </div>
       <div className="mb-3">

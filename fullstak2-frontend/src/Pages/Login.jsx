@@ -9,27 +9,40 @@ export default function Login() {
   const [modo, setModo] = useState("login");
   const [form, setForm] = useState({ nombre: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [exito, setExito] = useState("");
   const [cargando, setCargando] = useState(false);
+
+  const validarEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setCargando(true);
+    
+    // Validar formato de email
+    if (!validarEmail(form.email)) {
+      setError("Por favor ingresa un email válido.");
+      setCargando(false);
+      return;
+    }
+    
     try {
       if (modo === "login") {
         const data = await login({ email: form.email, password: form.password });
-        // Redirigir según rol devuelto por el backend/contexto
         const rol = data?.user?.rol || "CLIENTE";
         navigate(rol === "ADMIN" ? "/admin" : "/");
       } else {
-        const data = await register({ nombre: form.nombre, email: form.email, password: form.password });
-        // Los nuevos usuarios son CLIENTE por defecto
-        const rol = data?.user?.rol || "CLIENTE";
-        navigate(rol === "ADMIN" ? "/admin" : "/");
+        const result = await register({ nombre: form.nombre, email: form.email, password: form.password });
+        setExito(result?.mensaje || "Registro exitoso. Ahora inicia sesión.");
+        // Limpiar password y cambiar a modo login para que el usuario inicie sesión manualmente
+        setForm(f => ({ ...f, password: "" }));
+        setModo("login");
       }
     } catch (err) {
-      setError("No se pudo completar la operación. Verifica tus datos.");
-      console.error(err);
+      setError(err?.message || "No se pudo completar la operación. Verifica tus datos.");
     } finally {
       setCargando(false);
     }
@@ -45,7 +58,8 @@ export default function Login() {
         <h1 className="auth-title">{modo === "login" ? "¡Bienvenido de nuevo!" : "Crea tu cuenta"}</h1>
         <p className="auth-subtitle">Pastelería Dulce Sabor</p>
 
-        {error && <div className="auth-error">{error}</div>}
+  {error && <div className="auth-error">{error}</div>}
+  {exito && <div className="auth-success">{exito}</div>}
 
         <form onSubmit={onSubmit} className="auth-form">
           {modo === "register" && (
