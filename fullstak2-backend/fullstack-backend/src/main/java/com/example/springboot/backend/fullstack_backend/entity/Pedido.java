@@ -15,8 +15,17 @@ public class Pedido {
     private Long id;
 
     private String fecha;
+    // Número correlativo de boleta
+    private Long numero;
+    // Subtotal de la compra sin IVA
+    private Double subtotal;
+    // Monto de IVA aplicado
+    private Double iva;
+    // Total con IVA
     private Double total;
+    // correo del usuario comprador
     private String usuario;
+    // detalle libre (ej. JSON resumido)
     private String detalles;
 
     public Pedido() {
@@ -44,6 +53,30 @@ public class Pedido {
 
     public void setFecha(String fecha) {
         this.fecha = fecha;
+    }
+
+    public Long getNumero() {
+        return numero;
+    }
+
+    public void setNumero(Long numero) {
+        this.numero = numero;
+    }
+
+    public Double getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(Double subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    public Double getIva() {
+        return iva;
+    }
+
+    public void setIva(Double iva) {
+        this.iva = iva;
     }
 
     public Double getTotal() {
